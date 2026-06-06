@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservas</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Gestión de Reservas</h1>
+    <!--boton pa volver al menu principal-->
+    <a href="index.html" class="back-button">
+        ← Volver al menú</a>
+
+    <hr>
+
+    <h2>Crear Reserva</h2>
+    <hr>
+        <!--Campos necesarios para la creacion de reservas-->
+    <input type="text" id="seatNumber" placeholder="Número de asiento">
+    <br><br>
+
+    <input type="number" id="userId" placeholder="ID Usuario">
+    <br><br>
+
+    <input type="number" id="routeId" placeholder="ID Ruta">
+    <br><br>
+        <!--Boton de creacion de reserva-->
+    <button id="createReservationBtn">
+        Crear Reserva
+    </button>
+    <!--mensaje de exito o error al crear una reservacion-->
+    <p id="reservationMessage"></p>
+    <hr>
+
+    <h2>Consultar Asientos Disponibles</h2>
+    <!--campos necesarios para la consulta d elos asientos disponibles-->
+    <input
+        type="number"
+        id="routeSeatsId"
+        placeholder="ID Ruta">
+    <br><br>
+    <!--boton de carga de los asientos disponibles-->
+    <button id="loadSeatsBtn">
+    Ver Asientos Disponibles
+    </button>
+    <!-- lista de los disponibles -->
+    <ul id="availableSeatsList"></ul>
+    <hr>
+    
+    <h2>Reservas Registradas</h2>
+    <!-- campos necesarios para consultar las reservaciones -->
+    <input type="number"
+       id="reservationIdConfirm"
+       placeholder="ID de Reserva">
+    <br><br>
+    <!-- boton para la confirmacion de las reservas -->
+    <button id="confirmReservationBtn">
+        Confirmar Reserva
+    </button>
+    <!-- mensaje de confirmacion o error de la confirmacion de una reservacion -->
+    <p id="confirmMessage"></p>
+    <br>
+    <!-- boton para cargar las reservaciones registradas -->
+    <button id="loadReservationsBtn">
+        Cargar Reservas
+    </button>
+    <!-- lista de las reservaciones registradas -->
+    <ul id="reservationsList"></ul>
+   
+    <!-- trae el script logico de la pagina -->
+    <script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Gestión de Usuarios</h1>
+    <!-- boton para volver al menu -->
+    <a href="index.html" class="back-button">
+        ← Volver al menú</a>
+    <hr>
+
+    <h2>Registrar Usuario</h2>
+        <!-- campos necesarios para la creacion de usuarios -->
+    <input type="text" id="userName" placeholder="Nombre">
+    <br><br>
+
+    <input type="email" id="userEmail" placeholder="Correo">
+    <br><br>
+        <!-- boton para crear el usuario -->
+    <button id="createUserBtn">
+        Registrar Usuario
+    </button>
+    <!-- depende el escenario, mostrara un mensaje de error o exito-->
+    <p id="userMessage"></p>
+
+    <hr>
+
+    <h2>Usuarios Registrados</h2>
+    <!-- btn para cargar usuarios-->
+    <button id="loadUsersBtn">
+        Cargar Usuarios
+    </button>
+    <!-- muestra el usuario por su id-->
+    <ul id="usersList"></ul>
+    <!-- trae los cripts necesarios para que funcione -->
+    <script src="app.js"></script>
+
+</body>
+</html>

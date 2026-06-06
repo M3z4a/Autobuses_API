@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empresas</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Gestión de Empresas</h1>
+    <!-- boton para volver al menu -->
+    <a href="index.html" class="back-button">
+        ← Volver al menú</a>
+
+    <hr>
+
+    <h2>Registrar Empresa</h2>
+        <!-- campos necesarios para el registro de empresas -->
+    <input type="text" id="companyName" placeholder="Nombre">
+    <br><br>
+
+    <input type="email" id="companyEmail" placeholder="Correo">
+    <br><br>
+
+    <input type="text" id="companyPhone" placeholder="Teléfono">
+    <br><br>
+        <!-- boton para registrar la emoresa -->
+    <button id="createCompanyBtn">
+        Registrar Empresa
+    </button>
+    <!-- depende la situacion muestra mensaje de exito o error -->
+    <p id="companyMessage"></p>
+
+    <hr>
+
+    <h2>Empresas Registradas</h2>
+    <!-- boton para cargar las empresas registradas -->
+    <button id="loadCompaniesBtn">
+        Cargar Empresas
+    </button>
+    <!-- muestra las empresas en una lista-->
+    <ul id="companiesList"></ul>
+    <!-- trae los scripts necesarios para el funcionamiento correcto -->
+    <script src="app.js"></script>
+
+</body>
+</html>

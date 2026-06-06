@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Dashboard General</h1>
+
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="empresas.html">Empresas</a>
+        <a href="usuarios.html">Usuarios</a>
+        <a href="rutas.html">Rutas</a>
+        <a href="reservas.html">Reservas</a>
+    </nav>
+
+    <hr>
+
+    <button id="loadDashboardBtn">
+        Actualizar Dashboard
+    </button>
+
+    <div class="dashboard-grid">
+
+        <div class="card">
+            <h2>Empresas</h2>
+            <p class="big-number" id="companiesCount">0</p>
+            <p>Empresas registradas en el sistema</p>
+        </div>
+
+        <div class="card">
+            <h2>Usuarios</h2>
+            <p class="big-number" id="usersCount">0</p>
+            <p>Usuarios registrados</p>
+        </div>
+
+        <div class="card">
+            <h2>Rutas</h2>
+            <p class="big-number" id="routesCount">0</p>
+            <p>Rutas disponibles</p>
+        </div>
+
+        <div class="card">
+            <h2>Reservas</h2>
+            <p class="big-number" id="reservationsCount">0</p>
+            <p>Reservas realizadas</p>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>

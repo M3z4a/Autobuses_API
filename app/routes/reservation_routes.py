@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from app.auth import require_employee, require_client
 from sqlalchemy.orm import Session
 # importa todos lo modelos necesarios para reservar
 from app.database import SessionLocal
@@ -6,6 +7,7 @@ from app.models.reservation import Reservation
 from app.models.user import User
 from app.models.route import Route
 from app.schemas.reservation import ReservationCreate, ReservationResponse
+from app.auth import get_current_user
 # El router de reservas
 router = APIRouter(
     prefix="/reservations",
@@ -21,7 +23,12 @@ def get_db():
 
 # endponit de reserva
 @router.post("/", response_model=ReservationResponse)
-def create_reservation(reservation: ReservationCreate, db: Session = Depends(get_db)):
+def create_reservation(
+    reservation: ReservationCreate,
+    db: Session = Depends(get_db),
+    # cualquiera puede crear una reservacion
+    current_user=Depends(require_client)
+):
     # verifica que el usuario existe
     user = db.query(User).filter(User.id == reservation.user_id).first()
     if not user:
@@ -56,26 +63,31 @@ def create_reservation(reservation: ReservationCreate, db: Session = Depends(get
 
 # endpoint para ver las reservas
 @router.get("/", response_model=list[ReservationResponse])
-def get_reservations(db: Session = Depends(get_db)):
+def get_reservations(
+    db: Session = Depends(get_db),
+    # solo empleados y administradores pueden ver las reservas
+    current_user=Depends(require_employee)
+):
     return db.query(Reservation).all()
 
 @router.get("/details")
-def get_reservations_details(db: Session = Depends(get_db)):
+def get_reservations_details(
+    db: Session = Depends(get_db),
+    # solo empleado y admin pueden ver los detalles de las reservaciones
+    current_user=Depends(require_employee)
+):
 
     reservations = db.query(Reservation).all()
-
     result = []
 
     for reservation in reservations:
-
         user = db.query(User).filter(
             User.id == reservation.user_id
         ).first()
-
         route = db.query(Route).filter(
             Route.id == reservation.route_id
         ).first()
-
+        # los resultados que se mostraran 
         result.append({
             "id": reservation.id,
             "seat_number": reservation.seat_number,
@@ -87,7 +99,12 @@ def get_reservations_details(db: Session = Depends(get_db)):
     return result
 # endpoint para confirmar la reservacion
 @router.put("/{reservation_id}/confirm")
-def confirm_reservation(reservation_id: int, db: Session = Depends(get_db)):
+def confirm_reservation(
+    reservation_id: int,
+    db: Session = Depends(get_db),
+    #solo empleados y admin pueden aceptar las reservaciones
+    current_user=Depends(require_employee)
+):
     # busca la reservacion por su id
     reservation = db.query(Reservation).filter(
         Reservation.id == reservation_id
@@ -105,7 +122,12 @@ def confirm_reservation(reservation_id: int, db: Session = Depends(get_db)):
 
 # endponit para ver los asientod disponibles en una ruta
 @router.get("/route/{route_id}/available-seats")
-def get_available_seats(route_id: int, db: Session = Depends(get_db)):
+def get_available_seats(
+    route_id: int,
+    db: Session = Depends(get_db),
+    # todos pueden ver los asientos disponibles en una ruta
+    current_user=Depends(require_client)
+):
     # muestra  el total de asientos disponibles
     total_seats = [f"A{i}" for i in range(1, 30)]
     # busca las reservaciones de esa ruta
@@ -124,7 +146,11 @@ def get_available_seats(route_id: int, db: Session = Depends(get_db)):
 
 # endpoint para mostrar un dashboard con las reservaciones totales, pendientes y ya confirmadas
 @router.get("/dashboard/summary")
-def dashboard_summary(db: Session = Depends(get_db)):
+def dashboard_summary(
+    db: Session = Depends(get_db),
+    # solo empleado y admin pueden consultar el dashboard
+    current_user=Depends(require_employee)
+):
     # muestra todas las reservaciones hechas
     total_reservations = db.query(Reservation).count()
     # muestra las reservaciones que estan pendietnes
@@ -141,3 +167,17 @@ def dashboard_summary(db: Session = Depends(get_db)):
         "pending": pending,
         "confirmed": confirmed
     }
+
+@router.get("/my-reservations")
+def get_my_reservations(
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+
+    user_id = int(user.get("sub"))
+
+    reservations = db.query(Reservation).filter(
+        Reservation.user_id == user_id
+    ).all()
+
+    return reservations

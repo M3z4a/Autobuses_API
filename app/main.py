@@ -1,24 +1,36 @@
+# importaciones necesarias para el funcionamiento
 from fastapi import FastAPI
-from app.models.route import Route
-# importa los modelos necesarios para la creacion de las tablas en bd
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from app.database.database import Base
 from app.database.database import engine
+# importaciones de los modelos
+from app.models.route import Route
 from app.models.company import Company
-from app.routes.companies import router as company_router
-from app.routes.route_routes import router as route_router
 from app.models.user import User
 from app.models.reservation import Reservation
-# importa los routers de las rutas para incluirlos en la aplicacion
+# importacion de las rutas
+from app.routes.companies import router as company_router
+from app.routes.route_routes import router as route_router
 from app.routes.user_routes import router as user_router
 from app.routes.reservation_routes import router as reservation_router
-# crea la app de fastAPI
-app = FastAPI(
-    #asigna el titulo de la app
-    title="Transport API"
-)
-# crea las tablas en la bd a partir de modelos ya definidos
+
+# cracion de la app
+app = FastAPI(title="Transport API")
+
+# crea las tablas
 Base.metadata.create_all(bind=engine)
-# incluyo routers para que sean utilizables por la app
+
+# cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# routers
 app.include_router(company_router)
 app.include_router(route_router)
 app.include_router(user_router)

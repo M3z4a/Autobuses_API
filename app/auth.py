@@ -4,7 +4,7 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-SECRET_KEY = "tu_clave_super_secreta_cambiala_despues"
+SECRET_KEY = "secreto"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 security = HTTPBearer()

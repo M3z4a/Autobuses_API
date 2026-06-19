@@ -1,0 +1,122 @@
+<!--esta vista esta asi de mal hecha porque se me olvido y la agregue hasta el ultimo(luego lo separo como las demas vistas)-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+      <!--estilo de la pagina-->
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 320px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #6a1b9a;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background: #6a1b9a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4a148c;
+        }
+        .link {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .link a {
+            color: #6a1b9a;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+    <h2>Registro</h2>
+      <!--campos para crear un usuario-->
+    <input id="name" placeholder="Nombre">
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Contraseña">
+    <!-- fijo a client -->
+    <input id="role" value="client" disabled>
+    <button onclick="register()">Crear cuenta</button>
+    <div class="link">
+        <a href="login.html">Ya tengo cuenta</a>
+    </div>
+
+</div>
+  <!--scripts necesarios para el funcionamiento conjunto del frontend y el backend (no quitar)-->
+<script>
+const API_URL = "http://127.0.0.1:8000";
+//funcion para registrar usuario
+async function register() {
+    //parametros necesarios
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    //si no se completan los parametros maracara una alerta y error
+    if (!name || !email || !password) {
+        alert("Completa todos los campos");
+        return;
+    }
+    //manda a llamar a la API
+    try {
+
+        const res = await fetch(`${API_URL}/users/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                password,
+                role: "client"
+            })
+        });
+        const data = await res.json();
+        //si no conecta la API mostrara una alerta y error
+        if (!res.ok) {
+            alert(data.detail || "Error registrando usuario");
+            return;
+        }
+        //si conecto bien se mostrara un mensaje de exito
+        alert("Cuenta creada correctamente");
+        window.location.href = "login.html";
+    //si no conecta, mostrara un mensaje de error
+    } catch (err) {
+        console.error(err);
+        alert("Error de conexión");
+    }
+}
+</script>
+</body>
+</html>

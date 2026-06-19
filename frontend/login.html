@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <!--conecta con la hoja de estilos-->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-page">
+    <div class="container">
+        <h1>Iniciar Sesión</h1>
+        <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="password" placeholder="********">
+        </div>
+        <button class="btn" onclick="login()">
+            Ingresar
+        </button>
+        <p style="margin-top: 20px;">
+            ¿No tienes cuenta?
+            <a href="register.html">Regístrate</a>
+        </p>
+        <p>
+            <a href="index.html">Volver al inicio</a>
+        </p>
+    </div>
+<!--scripts necesarios para el funcionamiento conjunto del frontend y el backend (no quitar)-->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+
+</body>
+</html>

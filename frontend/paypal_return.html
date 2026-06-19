@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Procesando pago</title>
+</head>
+<body>
+    <h2>Procesando pago...</h2>
+    <!--scripts necesarios para el funcionamiento conjunto del frontend y el backend (no quitar)-->
+    <script src="js/api.js"></script>
+    <script>
+    window.onload = async () => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get("token");
+            const payerId = urlParams.get("PayerID");
+            const reservation_id = urlParams.get("reservation_id");
+            console.log("TOKEN:", token);
+            console.log("PAYER:", payerId);
+            console.log("RESERVATION:", reservation_id);
+            //si no se encuentran los datos de pago, se mostrara un error (una pagina con texto)
+            if (!token || !reservation_id) {
+                document.body.innerHTML = "<h2>Error: datos de pago no encontrados</h2>";
+                return;
+            }   
+            //llama a la APi
+            const response = await fetch(
+                `${API_URL}/payments/capture/${token}/${reservation_id}`,
+                {
+                    method: "POST",
+                    headers: authHeaders()
+                }
+            );
+            const data = await response.json();
+            document.body.innerHTML = `
+                <h2>${data.message}</h2>
+                <p>Status: ${data.paypal_status}</p>
+                <!--si se realiza el pago, en esta pagina podras redirigirte al dashboard-->
+                <a href="dashboard.html">Volver al dashboard</a>
+            `;
+        //si no conecta a la API, se muestra un error en una pantalla (pagina/vista)
+        } catch (error) {
+            console.error(error);
+            document.body.innerHTML = "<h2>Error procesando pago</h2>";
+        }
+    };
+    </script>
+</body>
+</html>

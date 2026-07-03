@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-# esquema de una ruta
+# esquema base de una ruta
 class RouteBase(BaseModel):
     origin: str
     destination: str
@@ -7,10 +7,12 @@ class RouteBase(BaseModel):
 # esquema para crear una ruta
 class RouteCreate(RouteBase):
     company_id: int
-# esquema para actualizar una ruta
+    units_id: int   
+# esquema para respuesta
 class RouteResponse(RouteBase):
     id: int
     company_id: int
+    units_id: int  
 
     class Config:
         from_attributes = True

@@ -1,17 +1,18 @@
 let editingRouteId = null;
-//funcion que muestra las rutas
+// muestra la vista de rutas y carga las rutas en la tabla
 async function showRoutes() {
-    //titulo de la pagina
+    const user = getCurrentUser();
     pageTitle.textContent = "Rutas";
-    //contenedor HTML
+    const newButton =
+        user.role !== "client"
+            ? `<button onclick="openRouteModal()">Nueva ruta</button>`
+            : "";
+    // carga la tabla de rutas
     content.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2>Rutas</h2>
-            <button onclick="openRouteModal()">
-                Nueva ruta
-            </button>
+            ${newButton}
         </div>
-        <!-- Tabla que muestra rutas -->
         <table id="routesTable">
             <thead>
                 <tr>
@@ -20,34 +21,34 @@ async function showRoutes() {
                     <th>Destino</th>
                     <th>Salida</th>
                     <th>Empresa</th>
+                    <th>Unidad</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
-        <!-- cuadro de dialogo-->
         <div id="routeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); justify-content:center; align-items:center;">
             <div style="background:white; padding:20px; border-radius:10px; width:320px;">
                 <h3 id="routeModalTitle">Ruta</h3>
                 <input id="origin" placeholder="Origen">
                 <input id="destination" placeholder="Destino">
-                <input id="departure_time" placeholder="Hora de salida (DD-MM-YYYY HH:MM)">
+                <input id="departure_time" placeholder="Hora de salida">
                 <input id="company_id" placeholder="ID Empresa" type="number">
+                <input id="units_id" placeholder="ID Unidad" type="number">
                 <br><br>
-                <!-- boton de guardar y cancelar -->
                 <button onclick="saveRoute()">Guardar</button>
                 <button onclick="closeRouteModal()">Cancelar</button>
             </div>
-
         </div>
     `;
+    // carga las rutas desde la API
     loadRoutes();
 }
-
-//lista y muestra las rutas
+// carga las ritas desde API y muestra en tabla
 async function loadRoutes() {
+    const user = getCurrentUser();
     const tbody = document.querySelector("#routesTable tbody");
-    //manda a llamar a la Api
+
     try {
         const res = await fetch(`${API_URL}/routes/`, {
             headers: authHeaders()
@@ -55,6 +56,25 @@ async function loadRoutes() {
         const data = await res.json();
         tbody.innerHTML = "";
         data.forEach(r => {
+            let acciones = "";
+            // edicion y eliminacion de una ruta para empleado y admin
+            if (user.role === "admin" || user.role === "employee") {
+                acciones = `
+                    <button onclick="editRoute(
+                        ${r.id},
+                        '${r.origin}',
+                        '${r.destination}',
+                        '${r.departure_time}',
+                        ${r.company_id},
+                        ${r.units_id || 0}
+                    )">Editar</button>
+                    <button onclick="deleteRoute(${r.id})">Borrar</button>
+                `;
+                //si es cliente solo puede ver la ruta
+            } else {
+                acciones = `<span>Solo lectura</span>`;
+            }
+            //parametros que se muestran en la tabla de rutas
             tbody.innerHTML += `
                 <tr>
                     <td>${r.id}</td>
@@ -62,29 +82,18 @@ async function loadRoutes() {
                     <td>${r.destination}</td>
                     <td>${r.departure_time}</td>
                     <td>${r.company_id}</td>
-                    <td>
-                        <!--boton de editar ruta y sus parametros necesarios para hacerlo-->
-                        <button onclick="editRoute(
-                            ${r.id},
-                            '${r.origin}',
-                            '${r.destination}',
-                            '${r.departure_time}',
-                            ${r.company_id}
-                        )">Editar</button>
-                        <!--boton para borrar ruta-->
-                        <button onclick="deleteRoute(${r.id})">Borrar</button>
-                    </td>
+                    <td>${r.units_id || "Sin unidad"}</td>
+                    <td>${acciones}</td>
                 </tr>
             `;
         });
-        //en caso de no poder llamar la API se mostrara un mensaje de error como alerta y el error en la consola
+    // si hay un error cargando las rutas, simplemente dara error y no cargara nada
     } catch (error) {
         console.error(error);
         alert("Error cargando rutas");
     }
 }
-
-//ventana para crear una ruta
+// abre el modal de las rutas para crear una nueva ruta
 function openRouteModal() {
     editingRouteId = null;
     document.getElementById("routeModalTitle").textContent = "Nueva ruta";
@@ -92,41 +101,48 @@ function openRouteModal() {
     document.getElementById("destination").value = "";
     document.getElementById("departure_time").value = "";
     document.getElementById("company_id").value = "";
+    document.getElementById("units_id").value = "";
     document.getElementById("routeModal").style.display = "flex";
 }
+// cierra el modal  de las rutas
 function closeRouteModal() {
     document.getElementById("routeModal").style.display = "none";
 }
-//crear y editar una ruta
+// funcion que guarda las rutas, ya sea una nueva ruta o la edicion de una existente
 async function saveRoute() {
+    // obtiene los valores de los campos del modal
     const origin = document.getElementById("origin").value;
     const destination = document.getElementById("destination").value;
     const departure_time = document.getElementById("departure_time").value;
     const company_id = document.getElementById("company_id").value;
-    //si no se llenan los campos necesarios para la creacion o edicion de una ruta sera imposible crearla y mandara una alerta
-    if (!origin || !destination || !departure_time || !company_id) {
+    const units_id = document.getElementById("units_id").value;
+    // valida que todos los campos esten completos
+    if (!origin || !destination || !departure_time || !company_id || !units_id) {
         alert("Completa todos los campos");
         return;
     }
+    // crea el payload para enviar a la API
     const payload = {
         origin,
         destination,
         departure_time,
-        company_id: parseInt(company_id)
+        company_id: parseInt(company_id),
+        units_id: parseInt(units_id)
     };
-    //manda a llamar a la API
+    // verifica si es nueva ruta o edicion de una
     let url = `${API_URL}/routes/`;
     let method = "POST";
     if (editingRouteId) {
         url = `${API_URL}/routes/${editingRouteId}`;
         method = "PUT";
     }
+    // envia la solicitud a la API para guardar la ruta
     const res = await fetch(url, {
         method,
         headers: authHeaders(),
         body: JSON.stringify(payload)
     });
-    //en caso de no conectar la API se mostrara una alerta y error
+    // si hay algun error, muestra un mensaje de error y no hace nada
     if (!res.ok) {
         alert("Error guardando ruta");
         return;
@@ -134,29 +150,28 @@ async function saveRoute() {
     closeRouteModal();
     loadRoutes();
 }
-//editar ruta
-function editRoute(id, origin, destination, departure_time, company_id) {
+// edita una ruta, abre el modal con los datos de la ruta
+function editRoute(id, origin, destination, departure_time, company_id, units_id) {
     editingRouteId = id;
     document.getElementById("routeModalTitle").textContent = "Editar ruta";
     document.getElementById("origin").value = origin;
     document.getElementById("destination").value = destination;
     document.getElementById("departure_time").value = departure_time;
     document.getElementById("company_id").value = company_id;
+    document.getElementById("units_id").value = units_id;
     document.getElementById("routeModal").style.display = "flex";
 }
-//eliminar ruta
+// borra una ruta, pide confirmacion y envia la solicitud a la API
 async function deleteRoute(id) {
-    //mensaje para confirmar la eliminacion
     if (!confirm("¿Eliminar esta ruta?")) return;
-    //conecta con la API
     const res = await fetch(`${API_URL}/routes/${id}`, {
         method: "DELETE",
         headers: authHeaders()
     });
-    //si no conecta con la API o el Id no coincide, sera imposble borrarla y mandara una alerta y un error
     if (!res.ok) {
         alert("Error eliminando ruta");
         return;
     }
+    // si todo sale bien, recarga la lista de rutas
     loadRoutes();
 }

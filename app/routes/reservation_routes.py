@@ -112,7 +112,7 @@ def update_reservation(
 def delete_reservation(
     reservation_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_client)
 ):
     #obtiene la reservacion de la bd
     reservation = db.query(Reservation).filter(

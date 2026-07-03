@@ -1,5 +1,4 @@
 let editingCompanyId = null;
-
 //funcion que carga las empresas
 async function showCompanies() {
     // titulo de la pagina
@@ -41,22 +40,16 @@ async function showCompanies() {
     `;
     loadCompanies();
 }
-
 // carga y lista las empresas (compañias)
 async function loadCompanies() {
-
     const tbody = document.querySelector("#companiesTable tbody");
     //llama a las empresas a listarse
     const res = await fetch(`${API_URL}/companies`, {
         headers: authHeaders()
     });
-
     const data = await res.json();
-
     tbody.innerHTML = "";
-
     data.forEach(c => {
-            
         tbody.innerHTML += `
         <!--Tabla html-->
             <tr>
@@ -74,7 +67,6 @@ async function loadCompanies() {
     });
 
 }
-
 //ventana de control de compañias
 function openCompanyModal() {
     editingCompanyId = null;
@@ -84,11 +76,10 @@ function openCompanyModal() {
     document.getElementById("phone").value = "";
     document.getElementById("companyModal").style.display = "flex";
 }
+// cierra el modal
 function closeCompanyModal() {
     document.getElementById("companyModal").style.display = "none";
 }
-
-
 //creacion de compañias
 async function saveCompany() {
     //campos necesarios para la creacion de compañias

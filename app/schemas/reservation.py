@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import Optional
-
 # esquema de reserva
 class ReservationBase(BaseModel):
     seat_number: str

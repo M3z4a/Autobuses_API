@@ -16,3 +16,4 @@ class Company(Base):
         back_populates="company",
         cascade="all, delete"
     )
+    

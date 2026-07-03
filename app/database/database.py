@@ -15,9 +15,7 @@ Base = declarative_base()
 # obtiene la sesion de la bd
 def get_db():
     db = SessionLocal()
-
     try:
         yield db
-
     finally:
         db.close()

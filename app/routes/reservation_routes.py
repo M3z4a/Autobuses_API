@@ -136,20 +136,15 @@ def get_available_seats(
     db: Session = Depends(get_db),
     current_user=Depends(require_client)
 ):
-    #el formato es A(numero) del 1 al 30
-    total_seats = [f"A{i}" for i in range(1, 30)]
-    #muestra los asientos por ruta
     reservations = db.query(Reservation).filter(
         Reservation.route_id == route_id
     ).all()
-    #oculta los ocupados
+
     taken_seats = [r.seat_number for r in reservations]
-    #muestra los disponibles
-    available = [s for s in total_seats if s not in taken_seats]
-    #devuelve losa sientos disponibles de la ruta
+
     return {
         "route_id": route_id,
-        "available_seats": available
+        "taken_seats": taken_seats
     }
 
 #ruta del dashboars

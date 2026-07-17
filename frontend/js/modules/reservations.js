@@ -1,6 +1,7 @@
 let selectedRoute = null;
 let selectedUnit = null;
 let selectedSeat = null;
+let occupiedSeats = [];
 // carga las rutas para el select de reservaciones
 async function showReservations() {
     pageTitle.textContent = "Reservaciones";
@@ -86,60 +87,85 @@ async function onRouteChange() {
 }
 // carga la unidad de la ruta seleccionada y renderiza el mapa de asientos
 async function loadUnitByRoute(unitId) {
-    // si la ruta no tiene unidad asignada, muestra un mensaje y no hace nada
     if (!unitId) {
         alert("Esta ruta no tiene unidad asignada");
         return;
     }
-    // obtiene la unidad desde la API y renderiza el mapa de asientos
     try {
+        // obtiene la unidad
         const res = await fetch(`${API_URL}/units/${unitId}`, {
             headers: authHeaders()
         });
-        // si la unidad no existe, muestra un error
         const unit = await res.json();
         selectedUnit = unit;
-        renderSeatMap(unit);
+        // obtiene los asientos ocupados de la ruta actual
+        let takenSeats = [];
+        if (selectedRoute?.id) {
+            const seatsRes = await fetch(
+                `${API_URL}/reservations/route/${selectedRoute.id}/available-seats`,
+                {
+                    headers: authHeaders()
+                }
+            );
+            const seatsData = await seatsRes.json();
+            takenSeats = seatsData.taken_seats || [];
+        }
+        // renderiza el mapa con asientos ocupados
+        renderSeatMap(unit, takenSeats);
     } catch (error) {
-        // si hay un error cargando la unidad, muestra un mensaje de error
         console.error(error);
         alert("Error cargando unidad");
+
     }
 }
 // renderiza el mapa de asientos de la unidad seleccionada
-function renderSeatMap(unit) {
+function renderSeatMap(unit, takenSeats = []) {
     const container = document.getElementById("seatMap");
     const input = document.getElementById("seat_number");
     selectedSeat = null;
     input.value = "";
-    //Si la unidad es un bus muestra 40 asientos, si es una combi muestra 12
     const total = unit.seat_count ?? (unit.type === "bus" ? 40 : 12);
-    // genera el HTML del mapa de asientos con botones para cada asiento
     let html = `
         <h3>Selecciona un asiento (${unit.type})</h3>
-        <div style="
-            display:grid;
-            grid-template-columns:repeat(4,60px);
-            gap:8px;
-            max-width:260px;
-        ">
+
+        <div class="${unit.type === "bus" ? "bus-layout" : "combi-layout"}">
     `;
     for (let i = 1; i <= total; i++) {
+        const seat = `A${i}`;
+        const occupied = takenSeats.includes(seat);
+        let position = "";
+        if (unit.type === "bus") {
+            const row = Math.floor((i - 1) / 4) + 1;
+            const col = ((i - 1) % 4) + 1;
+            // deja espacio en la columna del pasillo
+            const gridColumn = col <= 2 ? col : col + 1;
+            position = `grid-row:${row}; grid-column:${gridColumn};`;
+        }
         html += `
-            <button type="button"
-                onclick="selectSeat('A${i}')"
-                style="padding:10px;">
-                A${i}
+            <button 
+                type="button"
+                class="seat ${occupied ? "occupied" : ""}"
+                ${occupied ? "disabled" : ""}
+                style="${position}"
+                onclick="selectSeat('${seat}', this)">
+                ${seat}
             </button>
         `;
     }
-    html += `</div>`;
+    html += `
+        </div>
+    `;
     container.innerHTML = html;
 }
-// selecciona un asiento y lo guarda en la variable selectedSeat y en el input oculto
-function selectSeat(seat) {
+
+function selectSeat(seat, button) {
+    // quitar selección anterior
+    document.querySelectorAll(".seat.selected")
+        .forEach(btn => btn.classList.remove("selected"));
+
     selectedSeat = seat;
     document.getElementById("seat_number").value = seat;
+    button.classList.add("selected");
 }
 // guarda la reservación en la API
 async function saveReservation() {

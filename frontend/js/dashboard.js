@@ -63,7 +63,13 @@ function showClientDashboard() {
     pageTitle.textContent = "Dashboard";
     content.innerHTML = `<h2>Panel de Cliente</h2>`;
 }
-// muestra el dashboard segun el rol del usuario
-if (user.role === "admin") showAdminDashboard();
-if (user.role === "employee") showEmployeeDashboard();
-if (user.role === "client") showClientDashboard();
+// muestra la pagina inicial segun el rol del usuario
+const params = new URLSearchParams(window.location.search);
+const page = params.get("page");
+if (page === "reservations") {
+    showReservations();
+} else {
+    if (user.role === "admin") showAdminDashboard();
+    if (user.role === "employee") showEmployeeDashboard();
+    if (user.role === "client") showClientDashboard();
+}

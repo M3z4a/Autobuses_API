@@ -43,6 +43,7 @@ def create_route(
         origin=route.origin,
         destination=route.destination,
         departure_time=route.departure_time,
+        price=route.price,
         company_id=route.company_id,
         units_id=route.units_id 
     )
@@ -121,6 +122,7 @@ def update_route(
     route.origin = route_data.origin
     route.destination = route_data.destination
     route.departure_time = route_data.departure_time
+    route.price = route_data.price
     route.company_id = route_data.company_id
     route.units_id = route_data.units_id  
     # guarda los cambios en la bd

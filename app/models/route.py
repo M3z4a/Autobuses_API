@@ -8,6 +8,7 @@ class Route(Base):
     origin = Column(String, nullable=False)
     destination = Column(String, nullable=False)
     departure_time = Column(String, nullable=False)
+    price = Column(Integer, nullable=False, default=0)
     # relación con empresa
     company_id = Column(Integer, ForeignKey("companies.id"))
     company = relationship("Company", back_populates="routes")
@@ -16,3 +17,5 @@ class Route(Base):
     unit = relationship("Unit")
     # relación con reservaciones
     reservations = relationship("Reservation", back_populates="route")
+
+    

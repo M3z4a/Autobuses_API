@@ -4,6 +4,7 @@ class RouteBase(BaseModel):
     origin: str
     destination: str
     departure_time: str
+    price: int
 # esquema para crear una ruta
 class RouteCreate(RouteBase):
     company_id: int

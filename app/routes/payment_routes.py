@@ -5,6 +5,7 @@ from app.auth import get_current_user, require_employee, require_client
 from app.database.database import SessionLocal
 from app.models.reservation import Reservation
 from app.paypal_config import client
+from app.models.route import Route
 #router de pagos
 router = APIRouter(
     prefix="/payments",
@@ -20,7 +21,26 @@ def get_db():
 
 #crea la orden de paypal por medio del id de la reservacion
 @router.post("/create/{reservation_id}")
-def create_payment(reservation_id: int):
+def create_payment(
+    reservation_id: int,
+    db: Session = Depends(get_db)
+):
+    # busca la reservacion
+    reservation = db.query(Reservation).filter(
+        Reservation.id == reservation_id
+    ).first()
+    if not reservation:
+        raise HTTPException(
+            status_code=404,
+            detail="Reservación inexistente"
+        )
+    # obtiene el precio de la ruta asociada
+    route = reservation.route
+    if not route:
+        raise HTTPException(
+            status_code=404,
+            detail="Ruta inexistente"
+        )
     request = OrdersCreateRequest()
     request.prefer("return=representation")
     request.request_body({
@@ -29,7 +49,7 @@ def create_payment(reservation_id: int):
             {
                 "amount": {
                     "currency_code": "MXN",
-                    "value": "100.00"
+                    "value": str(route.price)
                 }
             }
         ],
@@ -40,22 +60,26 @@ def create_payment(reservation_id: int):
     })
     try:
         response = client.execute(request)
-        #si la url es correcta dejara prosegir, si no devuelve
         approval_url = None
         for link in response.result.links:
             if link.rel == "approve":
                 approval_url = link.href
                 break
         if not approval_url:
-            raise HTTPException(status_code=500, detail="No approval_url generated")
-        #da el id de la orden y el url de aprovacion
+            raise HTTPException(
+                status_code=500,
+                detail="No approval_url generated"
+            )
         return {
             "order_id": response.result.id,
             "approval_url": approval_url
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+    
 #captura el pago y confirma la reservacion
 @router.post("/capture/{order_id}/{reservation_id}")
 def capture_payment(order_id: str, reservation_id: int, db: Session = Depends(get_db)):

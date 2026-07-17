@@ -20,6 +20,7 @@ async function showRoutes() {
                     <th>Origen</th>
                     <th>Destino</th>
                     <th>Salida</th>
+                    <th>Precio</th>
                     <th>Empresa</th>
                     <th>Unidad</th>
                     <th>Acciones</th>
@@ -33,6 +34,7 @@ async function showRoutes() {
                 <input id="origin" placeholder="Origen">
                 <input id="destination" placeholder="Destino">
                 <input id="departure_time" placeholder="Hora de salida">
+                <input id="price" placeholder="Precio" type="number">
                 <input id="company_id" placeholder="ID Empresa" type="number">
                 <input id="units_id" placeholder="ID Unidad" type="number">
                 <br><br>
@@ -65,6 +67,7 @@ async function loadRoutes() {
                         '${r.origin}',
                         '${r.destination}',
                         '${r.departure_time}',
+                        ${r.price},
                         ${r.company_id},
                         ${r.units_id || 0}
                     )">Editar</button>
@@ -81,6 +84,7 @@ async function loadRoutes() {
                     <td>${r.origin}</td>
                     <td>${r.destination}</td>
                     <td>${r.departure_time}</td>
+                    <td>${r.price}</td>
                     <td>${r.company_id}</td>
                     <td>${r.units_id || "Sin unidad"}</td>
                     <td>${acciones}</td>
@@ -100,6 +104,7 @@ function openRouteModal() {
     document.getElementById("origin").value = "";
     document.getElementById("destination").value = "";
     document.getElementById("departure_time").value = "";
+    document.getElementById("price").value = "";
     document.getElementById("company_id").value = "";
     document.getElementById("units_id").value = "";
     document.getElementById("routeModal").style.display = "flex";
@@ -114,10 +119,11 @@ async function saveRoute() {
     const origin = document.getElementById("origin").value;
     const destination = document.getElementById("destination").value;
     const departure_time = document.getElementById("departure_time").value;
+    const price = document.getElementById("price").value;
     const company_id = document.getElementById("company_id").value;
     const units_id = document.getElementById("units_id").value;
     // valida que todos los campos esten completos
-    if (!origin || !destination || !departure_time || !company_id || !units_id) {
+    if (!origin || !destination || !departure_time || !price || !company_id || !units_id) {
         alert("Completa todos los campos");
         return;
     }
@@ -127,6 +133,7 @@ async function saveRoute() {
         destination,
         departure_time,
         company_id: parseInt(company_id),
+        price: parseInt(price),
         units_id: parseInt(units_id)
     };
     // verifica si es nueva ruta o edicion de una
@@ -151,13 +158,14 @@ async function saveRoute() {
     loadRoutes();
 }
 // edita una ruta, abre el modal con los datos de la ruta
-function editRoute(id, origin, destination, departure_time, company_id, units_id) {
+function editRoute(id, origin, destination, departure_time, price, company_id, units_id) {
     editingRouteId = id;
     document.getElementById("routeModalTitle").textContent = "Editar ruta";
     document.getElementById("origin").value = origin;
     document.getElementById("destination").value = destination;
     document.getElementById("departure_time").value = departure_time;
     document.getElementById("company_id").value = company_id;
+    document.getElementById("price").value = price;
     document.getElementById("units_id").value = units_id;
     document.getElementById("routeModal").style.display = "flex";
 }
@@ -175,3 +183,9 @@ async function deleteRoute(id) {
     // si todo sale bien, recarga la lista de rutas
     loadRoutes();
 }
+
+window.editRoute = editRoute;
+window.deleteRoute = deleteRoute;
+window.openRouteModal = openRouteModal;
+window.closeRouteModal = closeRouteModal;
+window.saveRoute = saveRoute;

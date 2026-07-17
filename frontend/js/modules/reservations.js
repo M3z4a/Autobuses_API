@@ -14,7 +14,15 @@ async function showReservations() {
             </select>
         </div>
         <div id="seatMap" style="margin-top:20px;"></div>
+        <br>
+        <input
+            type="text"
+            id="passenger_name"
+            placeholder="Nombre del pasajero"
+            style="width:300px; padding:8px;"
+        >
         <input type="hidden" id="seat_number">
+        <br><br>
         <button onclick="saveReservation()" style="margin-top:20px;">
             Confirmar reservación
         </button>
@@ -22,7 +30,7 @@ async function showReservations() {
         <table id="reservationsTable">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Pasajero</th>
                     <th>Asiento</th>
                     <th>Usuario</th>
                     <th>Ruta</th>
@@ -136,6 +144,7 @@ function selectSeat(seat) {
 // guarda la reservación en la API
 async function saveReservation() {
     const user = getCurrentUser();
+    const passenger_name = document.getElementById("passenger_name").value.trim();
     const seat_number = selectedSeat || document.getElementById("seat_number").value;
     const route_id = document.getElementById("route_id").value;
     let user_id;
@@ -145,12 +154,13 @@ async function saveReservation() {
         user_id = parseInt(prompt("ID del usuario"));
     }
     // valida que se hayan seleccionado todos los datos necesarios (improbable que falte alguno)
-    if (!seat_number || !route_id || !user_id) {
-        alert("Faltan datos");
+    if (!passenger_name || !seat_number || !route_id || !user_id) {
+        alert("Completa todos los campos");
         return;
     }
     // crea el payload para enviar a la API
     const payload = {
+        passenger_name,
         seat_number,
         user_id,
         route_id: parseInt(route_id)
@@ -230,7 +240,7 @@ async function loadReservations() {
             // muestra el contenedor con los datos de la reservacion
             tbody.innerHTML += `
                 <tr>
-                    <td>${r.id}</td>
+                    <td>${r.passenger_name}</td>
                     <td>${r.seat_number}</td>
                     <td>${r.user_id ?? "-"}</td>
                     <td>${r.route_id ?? "-"}</td>

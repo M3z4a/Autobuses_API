@@ -10,7 +10,7 @@ if (!user) {
     window.location.href = "login.html";
 }
 // Muestra el nombre (id aún) del usuario en el header
-document.getElementById("userName").textContent = user.sub;
+document.getElementById("userName").textContent = user.name;
 const menu = document.getElementById("menu");
 const content = document.getElementById("content");
 const pageTitle = document.getElementById("pageTitle");

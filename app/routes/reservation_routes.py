@@ -47,6 +47,7 @@ def create_reservation(
         raise HTTPException(status_code=400, detail="Asiento ya reservado")
     #parametros para la creacion de una reservacion
     new_reservation = Reservation(
+        passenger_name=reservation.passenger_name,
         seat_number=reservation.seat_number,
         user_id=reservation.user_id,
         route_id=reservation.route_id,
@@ -82,7 +83,7 @@ def get_reservations_details(
             "id": reservation.id,
             "seat_number": reservation.seat_number,
             "status": reservation.status,
-            "user_name": user.name if user else "Desconocido",
+            "passenger_name": reservation.passenger_name,
             "route_name": f"{route.origin} → {route.destination}" if route else "Desconocida"
         })
     return result
@@ -99,6 +100,7 @@ def update_reservation(
     r = db.query(Reservation).filter(Reservation.id == reservation_id).first()
     if not r:
         raise HTTPException(status_code=404, detail="No existe")
+    r.passenger_name = reservation.passenger_name
     r.seat_number = reservation.seat_number
     r.user_id = reservation.user_id
     r.route_id = reservation.route_id

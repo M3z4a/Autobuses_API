@@ -8,6 +8,7 @@ class Reservation(Base):
     #parametros de la bd
     id = Column(Integer, primary_key=True, index=True)
     seat_number = Column(String, nullable=False)
+    passenger_name = Column(String, nullable=False)
     status = Column(String, default="pending")
     user_id = Column(Integer, ForeignKey("users.id"))
     route_id = Column(Integer, ForeignKey("routes.id"))

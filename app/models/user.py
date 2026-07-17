@@ -14,7 +14,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
 
-    #rol del usuario
+    #rol del usuario,
     role = Column(String, nullable=False, default="client")
 
     # relaciona la tabla users (usuarios) con la tabla reservations (reservaciones)

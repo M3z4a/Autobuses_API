@@ -168,10 +168,6 @@ body.register-page .container{
     box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
 
-/* ===========================
-   MAPA DE ASIENTOS
-=========================== */
-
 /* COMBI: 2 columnas */
 .combi-layout {
     display: grid;

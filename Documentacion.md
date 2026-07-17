@@ -1,5 +1,6 @@
 # Documentacion Backend
 ---
+
 # Auth.py
 ## create_access_token()
 Archivo: `app/auth.py`
@@ -375,3 +376,389 @@ Parámetros:
 * current_user: usuario autenticado con permisos de administrador.
 Retorna:
 * Un mensaje confirmando que la unidad fue eliminada correctamente.
+
+# Api.js
+## setToken(token)
+Archivo: `frontend/api.js`
+Guarda el token JWT generado después de que el usuario inicia sesión correctamente. El token se almacena en el `localStorage` para poder utilizarlo en las solicitudes que requieren autenticación.
+Parámetros:
+* token: token JWT generado por el backend.
+Retorna:
+* No retorna ningún valor.
+
+## getToken()
+Archivo: `frontend/api.js`
+Obtiene el token JWT almacenado en el navegador para utilizarlo en las peticiones autenticadas.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* El token almacenado o `null` si no existe.
+
+## removeToken()
+Archivo: `frontend/api.js`
+Elimina el token JWT almacenado en el navegador. Se utiliza cuando el usuario cierra sesión para evitar que la sesión continúe activa.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## authHeaders()
+Archivo: `frontend/api.js`
+Genera los encabezados necesarios para realizar solicitudes autenticadas a la API. Agrega el token JWT en el encabezado `Authorization` utilizando el formato **Bearer**.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* Un objeto con los encabezados necesarios para las peticiones autenticadas.
+
+## parseJwt(token)
+Archivo: `frontend/api.js`
+Decodifica el contenido de un token JWT para obtener la información almacenada en él, como el identificador del usuario o su rol. Si el token es inválido, devuelve `null`.
+Parámetros:
+* token: token JWT que será decodificado.
+Retorna:
+* Un objeto con la información del token o `null` si ocurre un error.
+
+## getCurrentUser()
+Archivo: `frontend/api.js`
+Obtiene la información del usuario autenticado utilizando el token almacenado en el navegador.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* Un objeto con la información del usuario autenticado.
+
+## getUserRole()
+Archivo: `frontend/api.js`
+Obtiene el rol del usuario autenticado a partir de la información contenida en el token JWT.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* El rol del usuario o `null` si no existe un usuario autenticado.
+
+## requireAuth()
+Archivo: `frontend/api.js`
+Verifica que exista un token de autenticación antes de permitir el acceso a una página protegida. Si no existe un token válido, redirige al usuario al inicio de sesión.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## logout()
+Archivo: `frontend/api.js`
+Cierra la sesión del usuario eliminando el token almacenado y redirigiendo nuevamente a la pantalla de inicio de sesión.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+# Auth.js
+## login()
+Archivo: `frontend/auth.js`
+Realiza el proceso de autenticación del usuario. Obtiene las credenciales ingresadas, las envía al backend y, si son correctas, guarda el token recibido para permitir el acceso al sistema.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+# Dashboard.js
+## createMenuButton
+Archivo: `frontend/dashboard.js`
+Crea un botón dentro del menú lateral del dashboard y le asigna la función que se ejecutará cuando el usuario haga clic sobre él.
+Parámetros:
+* text: texto que se mostrará en el botón.
+* callback: función que se ejecutará al hacer clic en el botón.
+Retorna:
+* No retorna ningún valor.
+
+## showAdminDashboard()
+Archivo: `frontend/dashboard.js`
+Carga la vista principal del dashboard para los usuarios con rol de administrador.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## showEmployeeDashboard()
+Archivo: `frontend/dashboard.js`
+Carga la vista principal del dashboard para los usuarios con rol de empleado.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## showClientDashboard()
+Archivo: `frontend/dashboard.js`
+Carga la vista principal del dashboard para los usuarios con rol de cliente.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+# Companies.js
+## showCompanies()
+Archivo: `frontend/js/modules/companies.js`
+Muestra la sección de administración de empresas dentro del dashboard. Además de generar la estructura de la vista, prepara la tabla y el formulario necesarios para administrar los registros y posteriormente llama a la función encargada de cargar las empresas existentes.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## loadCompanies()
+Archivo: `frontend/js/modules/companies.js`
+Obtiene desde la API la lista de empresas registradas y actualiza la tabla mostrada en el dashboard. También genera las acciones disponibles para editar o eliminar cada empresa.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## openCompanyModal()
+Archivo: `frontend/js/modules/companies.js`
+Abre la ventana modal utilizada para registrar una nueva empresa o editar una existente. Además, prepara el formulario para que el usuario pueda ingresar la información correspondiente.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## closeCompanyModal()
+Archivo: `frontend/js/modules/companies.js`
+Cierra la ventana modal utilizada para registrar o editar empresas y limpia la información temporal del formulario.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## saveCompany()
+Archivo: `frontend/js/modules/companies.js`
+Obtiene los datos capturados en el formulario y los envía al backend para crear una nueva empresa o actualizar una existente, dependiendo del modo en que se encuentre el formulario. Una vez completada la operación, actualiza la tabla de empresas.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## editCompany()
+Archivo: `frontend/js/modules/companies.js`
+Recupera la información de una empresa seleccionada y la carga en el formulario de edición para que el usuario pueda modificar sus datos.
+Parámetros:
+* Recibe el identificador de la empresa que será editada.
+Retorna:
+* No retorna ningún valor.
+
+## deleteCompany()
+Archivo: `frontend/js/modules/companies.js`
+Elimina una empresa registrada mediante su identificador. Antes de realizar la eliminación solicita una confirmación al usuario y, al finalizar, actualiza la lista de empresas mostrada en el dashboard.
+Parámetros:
+* Recibe el identificador de la empresa que será eliminada.
+Retorna:
+* No retorna ningún valor.
+
+# Routes.js
+## showRoutes()
+Archivo: `frontend/js/modules/routes.js`
+Muestra la sección destinada a la administración de rutas dentro del dashboard. Genera la interfaz correspondiente y posteriormente carga la información de las rutas registradas.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## loadRoutes()
+Archivo: `frontend/js/modules/routes.js`
+Obtiene desde la API todas las rutas registradas y llena la tabla correspondiente. También agrega las acciones para editar o eliminar cada una de ellas.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## openRouteModal()
+Archivo: `frontend/js/modules/routes.js`
+Abre la ventana modal utilizada para registrar una nueva ruta o modificar una ya existente.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## closeRouteModal()
+**Archivo:** `frontend/js/modules/routes.js`
+Cierra la ventana modal de rutas y limpia la información capturada en el formulario.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## saveRoute()
+Archivo: `frontend/js/modules/routes.js`
+Obtiene la información ingresada en el formulario y la envía al backend para crear una nueva ruta o actualizar una existente. Al finalizar la operación, actualiza automáticamente la lista de rutas.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## editRoute()
+Archivo: `frontend/js/modules/routes.js`
+Carga la información de una ruta seleccionada dentro del formulario para que el usuario pueda modificar sus datos.
+Parámetros:
+* Recibe el identificador de la ruta que será editada.
+Retorna:
+* No retorna ningún valor.
+
+## deleteRoute()
+Archivo: `frontend/js/modules/routes.js`
+Elimina una ruta registrada utilizando su identificador. Antes de hacerlo solicita una confirmación al usuario y, una vez eliminada, actualiza la tabla de rutas.
+Parámetros:
+* Recibe el identificador de la ruta que será eliminada.
+Retorna:
+* No retorna ningún valor.
+
+# RSeservations.js
+## showReservations()
+Archivo: `frontend/js/modules/reservations.js`
+Muestra la sección de reservaciones dentro del dashboard. Genera la interfaz necesaria para crear nuevas reservaciones, visualizar los asientos disponibles y consultar las reservaciones registradas.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## loadRoutesForSelect()
+Archivo: `frontend/js/modules/reservations.js`
+Obtiene desde la API las rutas disponibles y llena el selector de rutas que utiliza el formulario de reservaciones.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## onRouteChange()
+Archivo: `frontend/js/modules/reservations.js`
+Se ejecuta cuando el usuario selecciona una ruta diferente. Actualiza la información relacionada con la ruta seleccionada y carga los datos necesarios para mostrar los asientos correspondientes.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## loadUnitByRoute()
+Archivo: `frontend/js/modules/reservations.js`
+Obtiene la unidad asignada a una ruta específica para conocer la cantidad de asientos disponibles y generar correctamente el mapa de asientos.
+Parámetros:
+* Recibe el identificador de la ruta seleccionada.
+Retorna:
+* No retorna ningún valor.
+
+## renderSeatMap()
+Archivo: `frontend/js/modules/reservations.js`
+Genera de manera dinámica el mapa de asientos de la unidad. Además, marca cuáles están disponibles, ocupados o seleccionados para facilitar el proceso de reservación.
+Parámetros:
+* Recibe la información de la unidad y los asientos ocupados.
+Retorna:
+* No retorna ningún valor.
+
+## selectSeat()
+Archivo: `frontend/js/modules/reservations.js`
+Permite seleccionar o deseleccionar un asiento dentro del mapa generado. También actualiza visualmente el asiento elegido para indicar cuál será reservado.
+Parámetros:
+* Recibe el asiento seleccionado.
+Retorna:
+* No retorna ningún valor.
+
+## saveReservation()
+Archivo: `frontend/js/modules/reservations.js`
+Obtiene la información capturada en el formulario y la envía al backend para registrar una nueva reservación. Si el proceso finaliza correctamente, actualiza la lista de reservaciones y el estado de los asientos.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## loadReservations()
+Archivo: `frontend/js/modules/reservations.js`
+Obtiene todas las reservaciones registradas y las muestra en la tabla correspondiente dentro del dashboard.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## deleteReservation()
+Archivo: `frontend/js/modules/reservations.js`
+Elimina una reservación utilizando su identificador. Antes de realizar la operación solicita una confirmación al usuario y posteriormente actualiza la tabla de reservaciones.
+Parámetros:
+* Recibe el identificador de la reservación.
+Retorna:
+* No retorna ningún valor.
+
+## startPayment()
+Archivo: `frontend/js/modules/reservations.js`
+Inicia el proceso de pago de una reservación enviando la información correspondiente al módulo de pagos para completar la operación.
+Parámetros:
+* Recibe el identificador de la reservación.
+Retorna:
+* No retorna ningún valor.
+
+# Units.js
+## showUnits()
+Archivo: `frontend/js/modules/units.js`
+Muestra la sección de administración de unidades dentro del dashboard. Además, genera la interfaz para registrar, editar y consultar las unidades existentes.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## loadUnits()
+Archivo: `frontend/js/modules/units.js`
+Obtiene desde la API todas las unidades registradas y actualiza la tabla mostrada en el dashboard.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## openUnitModal()
+Archivo: `frontend/js/modules/units.js`
+Abre la ventana modal utilizada para registrar una nueva unidad o editar una existente.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## closeUnitModal()
+Archivo: `frontend/js/modules/units.js`
+Cierra la ventana modal de unidades y limpia la información capturada en el formulario.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## saveUnit()
+Archivo: `frontend/js/modules/units.js`
+Obtiene la información ingresada por el usuario y la envía al backend para registrar una nueva unidad o actualizar una existente. Al finalizar, actualiza la lista de unidades.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+## editUnit()
+Archivo: `frontend/js/modules/units.js`
+Carga la información de una unidad seleccionada en el formulario para permitir su edición.
+Parámetros:
+* Recibe el identificador de la unidad.
+Retorna:
+* No retorna ningún valor.
+
+## deleteUnit()
+Archivo: `frontend/js/modules/units.js`
+Elimina una unidad registrada utilizando su identificador. Una vez completada la operación, actualiza la tabla de unidades mostrada en el dashboard.
+Parámetros:
+* Recibe el identificador de la unidad.
+Retorna:
+* No retorna ningún valor.
+
+# Users.js
+## showUsers()
+Archivo: `frontend/js/modules/users.js`
+Muestra la sección de usuarios dentro del dashboard. Además de actualizar el título de la página, genera la tabla donde se muestran los usuarios registrados y realiza una petición a la API para obtener la información. Si la consulta es exitosa, llena la tabla con el identificador, nombre, correo electrónico y rol de cada usuario. En caso de ocurrir un error durante la consulta, muestra un mensaje indicando que no fue posible cargar los usuarios.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.
+
+# Payments.js
+## showPayments()
+Archivo: `frontend/js/modules/payments.js`
+Muestra la sección de pagos dentro del dashboard. Actualiza el título de la página, genera la tabla donde se muestran los pagos confirmados y realiza una petición a la API para obtener la información registrada. Si la consulta se realiza correctamente, llena la tabla con el identificador de la reservación, el usuario, la ruta, el asiento y el estado del pago. Si ocurre un error al consultar la API, muestra un mensaje indicando que no fue posible cargar los pagos.
+Parámetros:
+* No recibe parámetros.
+Retorna:
+* No retorna ningún valor.

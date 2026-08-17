@@ -1,45 +1,105 @@
-from app.schemas.users import UserCreate, UserResponse, LoginRequest
+from app.schemas.users import ( UserRegister, UserCreate, UserResponse, LoginRequest)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from app.auth import create_access_token, require_admin
+from app.auth import (create_access_token, require_system_admin, require_company_admin, get_current_user)
 from app.database import SessionLocal
 from app.models.user import User
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from app.auth import hash_password
+
+pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
+
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
-#sesion de la bd
+
+# sesión de bd
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-#registrar usuario
+
+#registro publico
 @router.post("/register", response_model=UserResponse)
 def register_user(
-    user: UserCreate,
+    user: UserRegister,
     db: Session = Depends(get_db)
 ):
-    # validar email duplicado
-    existing_user = db.query(User).filter(User.email == user.email).first()
-    #si el email ya esta en uso, mandara error
+    existing_user = db.query(User).filter(
+        User.email == user.email
+    ).first()
     if existing_user:
         raise HTTPException(
             status_code=400,
             detail="El usuario ya existe"
         )
-    hashed_password = pwd_context.hash(user.password)
-    #parametros para crear admin
     new_user = User(
         name=user.name,
         email=user.email,
-        password=hashed_password,
-        role="client"   
+        password=pwd_context.hash(user.password),
+        role="traveler"
     )
-    #guarda en bd
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+#creacion de usuarios importantes
+@router.post("/create", response_model=UserResponse)
+def create_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    creator_role = current_user["role"]
+    # validar permisos de creación
+    allowed_roles = []
+    if creator_role == "system_admin":
+        allowed_roles = [
+            "company_admin",
+            "route_manager",
+            "auditor",
+            "traveler"
+        ]
+    elif creator_role == "company_admin":
+        allowed_roles = [
+            "route_manager",
+            "auditor",
+            "traveler"
+        ]
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="No tienes permisos para crear usuarios"
+        )
+    # impedir escalamiento de privilegios
+    if user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=403,
+            detail="No puedes crear este tipo de usuario"
+        )
+    existing_user = db.query(User).filter(
+        User.email == user.email
+    ).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="El usuario ya existe"
+        )
+    company_id = user.company_id
+    # company_admin no puede elegir empresa
+    if creator_role == "company_admin":
+        company_id = current_user["company_id"]
+    new_user = User(
+        name=user.name,
+        email=user.email,
+        password=pwd_context.hash(user.password),
+        role=user.role,
+        company_id=company_id
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -47,55 +107,109 @@ def register_user(
 
 #login
 @router.post("/login")
-def login(login_data: LoginRequest, db: Session = Depends(get_db)):
-    #verifica los campos si son correctos
+def login(
+    login_data: LoginRequest,
+    db: Session = Depends(get_db)
+):
     user = db.query(User).filter(
         User.email == login_data.email
     ).first()
-    #si no lo son manda error
-    if not user or not pwd_context.verify(login_data.password, user.password):
+    if not user or not pwd_context.verify(
+        login_data.password,
+        user.password
+    ):
         raise HTTPException(
             status_code=401,
             detail="Correo o contraseña incorrectos"
         )
-    #crea el token para la autoriazacion de roles
     access_token = create_access_token(
         data={
             "sub": str(user.id),
             "email": user.email,
             "name": user.name,
-            "role": user.role
+            "role": user.role,
+            "company_id": user.company_id
         }
     )
-    #devuelve el token
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "role": user.role
+        "role": user.role,
+        "company_id": user.company_id
     }
 
-#muestra los usuario (solo vista de admin)
+#obtiene usuarios
+
 @router.get("/", response_model=list[UserResponse])
 def get_users(
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin)
+    current_user=Depends(get_current_user)
 ):
-    #solicita los usuarios a la bd
-    return db.query(User).all()
+    if current_user["role"] == "system_admin":
 
-#busca un usario por id (solo admin)
+        return db.query(User).all()
+    if current_user["role"] == "company_admin":
+
+        return db.query(User).filter(
+            User.company_id ==
+            current_user["company_id"]
+        ).all()
+    raise HTTPException(
+        status_code=403,
+        detail="No tienes permisos"
+    )
+
+#busca usuario por id
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin)
+    current_user=Depends(get_current_user)
 ):
-    #pide y filtra un usuario por su id
-    user = db.query(User).filter(User.id == user_id).first()
-    #si no existe un id asociado a un usuario, mostrara error
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
     if not user:
         raise HTTPException(
             status_code=404,
             detail="Usuario no encontrado"
         )
-    return user
+    #system admin ve todo
+    if current_user["role"] == "system_admin":
+        return user
+    #company admin solo su empresa
+    if (
+        current_user["role"] == "company_admin"
+        and
+        user.company_id == current_user["company_id"]
+    ):
+        return user
+    raise HTTPException(
+        status_code=403,
+        detail="No puedes acceder a este usuario"
+    )
+
+@router.post("/users/bootstrap")
+def create_first_admin(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+    existing_admin = db.query(User).filter(
+        User.role == "system_admin"
+    ).first()
+    if existing_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="El system_admin ya existe"
+        )
+    hashed_password = hash_password(user.password)
+    new_user = User(
+        name=user.name,
+        email=user.email,
+        password=hashed_password,
+        role="system_admin"
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user

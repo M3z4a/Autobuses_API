@@ -9,10 +9,15 @@ class ReservationBase(BaseModel):
 # esquema para crear una reservacion
 class ReservationCreate(ReservationBase):
     pass
+class RouteInfo(BaseModel):
+    origin: str
+    destination: str
+    class Config:
+        from_attributes = True
 # esquema para actualizar una reservacion
 class ReservationResponse(ReservationBase):
     id: int
     status: str
-
+    route: RouteInfo
     class Config:
         from_attributes = True

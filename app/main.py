@@ -9,6 +9,7 @@ from app.routes.route_routes import router as route_router
 from app.models.user import User
 from app.models.unit import Unit
 from app.models.reservation import Reservation
+from app.models.payment import Payment
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os

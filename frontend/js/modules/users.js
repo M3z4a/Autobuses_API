@@ -15,6 +15,7 @@ async function showUsers() {
                     <th>Nombre</th>
                     <th>Email</th>
                     <th>Rol</th>
+                    <th>Empresa</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -39,6 +40,9 @@ async function showUsers() {
                     <td>${user.name}</td>
                     <td>${user.email}</td>
                     <td>${user.role}</td>
+                    <td>
+                        ${user.company_id ?? "Sin empresa"}
+                    </td>
                 </tr>
             `;
         });

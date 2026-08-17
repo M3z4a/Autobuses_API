@@ -16,4 +16,13 @@ class Company(Base):
         back_populates="company",
         cascade="all, delete"
     )
+    users = relationship(
+    "User",
+    back_populates="company"
+    )
+    units = relationship(
+    "Unit",
+    back_populates="company",
+    cascade="all, delete"
+    )
     

@@ -1,18 +1,23 @@
 let editingCompanyId = null;
 //funcion que carga las empresas
 async function showCompanies() {
+    const user = getCurrentUser();
     // titulo de la pagina
     pageTitle.textContent = "Empresas";
+    // boton de crear empresa solo para system_admin
+    const newButton = user.role === "system_admin"
+        ? `
+            <button onclick="openCompanyModal()">
+                Nueva empresa
+            </button>
+          `
+        : "";
     //contenedor html
     content.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2>Empresas</h2>
-            <!-- Boton de creacion de empresa -->
-            <button onclick="openCompanyModal()">
-                Nueva empresa
-            </button>
+            ${newButton}
         </div>
-        <!-- Tabla de compañias -->
         <table id="companiesTable">
             <thead>
                 <tr>
@@ -25,7 +30,6 @@ async function showCompanies() {
             </thead>
             <tbody></tbody>
         </table>
-        <!-- Modelo del renglon que muestra emoresa -->
         <div id="companyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); justify-content:center; align-items:center;">
             <div style="background:white; padding:20px; border-radius:10px; width:300px;">
                 <h3 id="modalTitle">Empresa</h3>
@@ -40,8 +44,9 @@ async function showCompanies() {
     `;
     loadCompanies();
 }
-// carga y lista las empresas (compañias)
+// carga y lista las empresas
 async function loadCompanies() {
+    const user = getCurrentUser();
     const tbody = document.querySelector("#companiesTable tbody");
     //llama a las empresas a listarse
     const res = await fetch(`${API_URL}/companies`, {
@@ -50,17 +55,26 @@ async function loadCompanies() {
     const data = await res.json();
     tbody.innerHTML = "";
     data.forEach(c => {
+        let actions = "Solo lectura";
+        //solo system_admin puede editar y eliminar empresas
+        if (user.role === "system_admin") {
+            actions = `
+                <button onclick="editCompany(${c.id}, '${c.name}', '${c.email}', '${c.phone}')">
+                    Editar
+                </button>
+                <button onclick="deleteCompany(${c.id})">
+                    Borrar
+                </button>
+            `;
+        }
         tbody.innerHTML += `
-        <!--Tabla html-->
             <tr>
                 <td>${c.id}</td>
                 <td>${c.name}</td>
                 <td>${c.email}</td>
                 <td>${c.phone}</td>
                 <td>
-                    <!--botones de editar empresa y borrar empresa, solo visibles para admin-->
-                    <button onclick="editCompany(${c.id}, '${c.name}', '${c.email}', '${c.phone}')">Editar</button>
-                    <button onclick="deleteCompany(${c.id})">Borrar</button>
+                    ${actions}
                 </td>
             </tr>
         `;
@@ -80,21 +94,24 @@ function openCompanyModal() {
 function closeCompanyModal() {
     document.getElementById("companyModal").style.display = "none";
 }
-//creacion de compañias
+//creacion y edicion de compañias
 async function saveCompany() {
-    //campos necesarios para la creacion de compañias
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const phone = document.getElementById("phone").value;
-    const payload = { name, email, phone };
-    //si se deja un campo vacio, lanzara un error y no se creara la empresa
+    //campos necesarios para la creacion de compañias
     if (!name || !email || !phone) {
         alert("Completa todos los campos");
         return;
     }
-    //llamados a la API
+    const payload = {
+        name,
+        email,
+        phone
+    };
     let url = `${API_URL}/companies`;
     let method = "POST";
+    //si existe id, actualiza empresa
     if (editingCompanyId) {
         url = `${API_URL}/companies/${editingCompanyId}`;
         method = "PUT";
@@ -104,7 +121,7 @@ async function saveCompany() {
         headers: authHeaders(),
         body: JSON.stringify(payload)
     });
-    //en caso de no conectar con la api, la empresa no se guardara y sera un error
+    //si hay error al guardar
     if (!res.ok) {
         alert("Error guardando empresa");
         return;
@@ -112,10 +129,8 @@ async function saveCompany() {
     closeCompanyModal();
     loadCompanies();
 }
-
 //edicion de compañias
 function editCompany(id, name, email, phone) {
-    //se edita la compañia por medio de su id (campo fundamental y principal para poder editar)
     editingCompanyId = id;
     document.getElementById("modalTitle").textContent = "Editar empresa";
     document.getElementById("name").value = name;
@@ -123,17 +138,13 @@ function editCompany(id, name, email, phone) {
     document.getElementById("phone").value = phone;
     document.getElementById("companyModal").style.display = "flex";
 }
-
 //borrar compañia
 async function deleteCompany(id) {
-    //mensaje de confirmacion
     if (!confirm("¿Eliminar esta empresa?")) return;
-    //manda a llamar a la API
     const res = await fetch(`${API_URL}/companies/${id}`, {
         method: "DELETE",
         headers: authHeaders()
     });
-    // si no existe la compañia o no conecta a la API no se eliminara y sera error
     if (!res.ok) {
         alert("Error eliminando empresa");
         return;

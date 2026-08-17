@@ -5,7 +5,7 @@ from app.models.route import Route
 from app.models.company import Company
 from app.models.unit import Unit 
 from app.schemas.route import RouteCreate, RouteResponse
-from app.auth import require_admin, require_client, require_employee
+from app.auth import require_company_admin, require_route_access, require_route_manager
 
 router = APIRouter(
     prefix="/routes",
@@ -25,17 +25,13 @@ def get_db():
 def create_route(
     route: RouteCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_route_manager)
 ):
-    # valida si la compañia existe
-    company = db.query(Company).filter(
-        Company.id == route.company_id
-    ).first()
-    # si no existe la compañia, lanza un error 404
-    if not company:
-        raise HTTPException(status_code=404, detail="Compañia inexistente")
     #valida la unidad asociada a la ruta, si no existe lanza un error 404
-    unit = db.query(Unit).filter(Unit.id == route.units_id).first()
+    unit = db.query(Unit).filter(
+    Unit.id == route.units_id,
+    Unit.company_id == current_user["company_id"]
+    ).first()
     if not unit:
         raise HTTPException(status_code=404, detail="Unidad inexistente")
     # crea la ruta en la bd
@@ -44,7 +40,7 @@ def create_route(
         destination=route.destination,
         departure_time=route.departure_time,
         price=route.price,
-        company_id=route.company_id,
+        company_id=current_user["company_id"],
         units_id=route.units_id 
     )
     # agrega la ruta a la bd y confirma la transaccion
@@ -54,27 +50,51 @@ def create_route(
     # retorna la ruta creada
     return new_route
 
-# deja ver todas las rutas
+#deja ver todas las rutas
 @router.get("/", response_model=list[RouteResponse])
 def get_routes(
     db: Session = Depends(get_db),
-    current_user=Depends(require_client)
+    current_user=Depends(require_route_access)
 ):
-    return db.query(Route).all()
+    # system_admin, traveler y auditor pueden ver todas las rutas
+    if current_user["role"] in [
+        "system_admin",
+        "traveler",
+        "auditor"
+    ]:
+        return db.query(Route).all()
 
-#deja ver una ruta por su id
+    # company_admin y route_manager solo ven las rutas de su empresa
+    return db.query(Route).filter(
+        Route.company_id == current_user["company_id"]
+    ).all()
+
 @router.get("/{route_id}", response_model=RouteResponse)
 def get_route(
     route_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_client)
+    current_user=Depends(require_route_access)
 ):
-    # busca la ruta por su id en la bd
-    route = db.query(Route).filter(Route.id == route_id).first()
-    # si no existe la ruta, lanza un error 404
+    # system_admin, traveler y auditor pueden ver cualquier ruta
+    if current_user["role"] in [
+        "system_admin",
+        "traveler",
+        "auditor"
+    ]:
+        route = db.query(Route).filter(
+            Route.id == route_id
+        ).first()
+    else:
+        # company_admin y route_manager solo ven rutas de su empresa
+        route = db.query(Route).filter(
+            Route.id == route_id,
+            Route.company_id == current_user["company_id"]
+        ).first()
     if not route:
-        raise HTTPException(status_code=404, detail="Ruta no encontrada")
-    # retorna la ruta encontrada
+        raise HTTPException(
+            status_code=404,
+            detail="Ruta no encontrada"
+        )
     return route
 
 #borra una ruta por su id
@@ -82,10 +102,13 @@ def get_route(
 def delete_route(
     route_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_company_admin)
 ):
     # busca la ruta por su id en la bd
-    route = db.query(Route).filter(Route.id == route_id).first()
+    route = db.query(Route).filter(
+    Route.id == route_id,
+    Route.company_id == current_user["company_id"]
+    ).first()
     # si no existe la ruta, lanza un error 404
     if not route:
         raise HTTPException(status_code=404, detail="Ruta no encontrada")
@@ -101,21 +124,21 @@ def update_route(
     route_id: int,
     route_data: RouteCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_route_manager)
 ):
     # busca la ruta por su id en la bd
-    route = db.query(Route).filter(Route.id == route_id).first()
+    route = db.query(Route).filter(
+    Route.id == route_id,
+    Route.company_id == current_user["company_id"]
+    ).first()
     # si no existe la ruta, lanza un error 404
     if not route:
         raise HTTPException(status_code=404, detail="Ruta no encontrada")
-    # valida si la compañia existe y si no existe lanza un error 404
-    company = db.query(Company).filter(
-        Company.id == route_data.company_id
-    ).first()
-    if not company:
-        raise HTTPException(status_code=404, detail="Compañia inexistente")
     # valida la unidad asociada a la ruta, si no existe lanza un error 404
-    unit = db.query(Unit).filter(Unit.id == route_data.units_id).first()
+    unit = db.query(Unit).filter(
+    Unit.id == route_data.units_id,
+    Unit.company_id == current_user["company_id"]
+    ).first()
     if not unit:
         raise HTTPException(status_code=404, detail="Unidad inexistente")
     # actualiza los datos de la ruta
@@ -123,7 +146,7 @@ def update_route(
     route.destination = route_data.destination
     route.departure_time = route_data.departure_time
     route.price = route_data.price
-    route.company_id = route_data.company_id
+    route.company_id = current_user["company_id"]
     route.units_id = route_data.units_id  
     # guarda los cambios en la bd
     db.commit()

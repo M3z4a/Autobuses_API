@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from app.models.company import Company
+from app.auth import require_company_admin, require_unit_access, require_authenticated
 from app.database import SessionLocal
 from app.models.unit import Unit
 from app.schemas.unit import UnitCreate, UnitResponse
-from app.auth import require_employee, require_client
 
 router = APIRouter(
     prefix="/units",
@@ -24,7 +24,7 @@ def get_db():
 def create_unit(
     unit: UnitCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_company_admin)
 ):
     #verifica el tipo de unidad y asigna el numero de asientos correspondiente
     if unit.type.lower() == "bus":
@@ -36,12 +36,23 @@ def create_unit(
             status_code=400,
             detail="Tipo inválido (solo bus o combi)"
         )
+    
+    company = db.query(Company).filter(
+    Company.id == current_user["company_id"]
+    ).first()
+
+    if not company:
+        raise HTTPException(
+            status_code=404,
+            detail="Empresa no encontrada"
+        )
     # parametros para la creacion de la unidad
     new_unit = Unit(
-        type=unit.type,
-        model=unit.model,
-        plates=unit.plates,
-        seat_count=seats
+    type=unit.type,
+    model=unit.model,
+    plates=unit.plates,
+    seat_count=seats,
+    company_id=current_user["company_id"]
     )
     #guarda en la bd
     db.add(new_unit)
@@ -54,26 +65,43 @@ def create_unit(
 @router.get("/", response_model=list[UnitResponse])
 def get_units(
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_authenticated)
 ):
-    return db.query(Unit).all()
+    # El administrador del sistema ve todas las unidades
+    if current_user["role"] == "system_admin":
+        return db.query(Unit).all()
+    # El resto solo ve las de su empresa
+    return db.query(Unit).filter(
+        Unit.company_id == current_user["company_id"]
+    ).all()
 
-#obtiene 1 unidad por id
+# obtiene 1 unidad por id
 @router.get("/{unit_id}", response_model=UnitResponse)
 def get_unit(
     unit_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_client)
+    current_user=Depends(require_unit_access)
 ):
-    # busca la unidad en la bd por id
-    unit = db.query(Unit).filter(Unit.id == unit_id).first()
-    # si no la encuentra manda un error
+    # Roles que pueden ver cualquier unidad
+    if current_user["role"] in [
+        "system_admin",
+        "traveler",
+        "auditor"
+    ]:
+        unit = db.query(Unit).filter(
+            Unit.id == unit_id
+        ).first()
+    # Personal de empresa solo ve las de su empresa
+    else:
+        unit = db.query(Unit).filter(
+            Unit.id == unit_id,
+            Unit.company_id == current_user["company_id"]
+        ).first()
     if not unit:
         raise HTTPException(
             status_code=404,
             detail="Unidad no encontrada"
         )
-    # si la encuentra la retorna
     return unit
 
 #actualiza la info de una unidad
@@ -82,10 +110,13 @@ def update_unit(
     unit_id: int,
     unit_data: UnitCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_company_admin)
 ):
     # busca la unidad en la bd por id
-    unit = db.query(Unit).filter(Unit.id == unit_id).first()
+    unit = db.query(Unit).filter(
+    Unit.id == unit_id,
+    Unit.company_id == current_user["company_id"]
+    ).first()
     # si no la encuentra manda un error
     if not unit:
         raise HTTPException(
@@ -118,10 +149,13 @@ def update_unit(
 def delete_unit(
     unit_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_employee)
+    current_user=Depends(require_company_admin)
 ):
     # busca la unidad en la bd por id
-    unit = db.query(Unit).filter(Unit.id == unit_id).first()
+    unit = db.query(Unit).filter(
+    Unit.id == unit_id,
+    Unit.company_id == current_user["company_id"]
+    ).first()
     # si no la encuentra manda un error
     if not unit:
         raise HTTPException(

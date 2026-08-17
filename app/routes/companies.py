@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.auth import require_admin, require_client
+from app.auth import require_system_admin, require_traveler
 from app.database.database import get_db
 from app.models.company import Company
 from app.models.route import Route
@@ -13,7 +13,7 @@ router = APIRouter()
 def create_company(
     company: CompanyCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_system_admin)
 ):
     #parametros para la creacion de compañias
     new_company = Company(
@@ -32,7 +32,7 @@ def create_company(
 @router.get("/companies")
 def get_companies(
     db: Session = Depends(get_db),
-    current_user=Depends(require_client)
+    current_user=Depends(require_system_admin)
 ):
     return db.query(Company).all()
 
@@ -42,7 +42,7 @@ def update_company(
     company_id: int,
     company: CompanyCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_system_admin)
 ):
     #pide el id como primer filtro
     company_db = db.query(Company).filter(
@@ -69,7 +69,7 @@ def update_company(
 def delete_company(
     company_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_system_admin)
 ):
     #como primer filtro requiere el id de la empresa
     company = db.query(Company).filter(
@@ -98,7 +98,7 @@ def delete_company(
 def get_company_routes(
     company_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_client)
+    current_user=Depends(require_traveler)
 ):
     #se busca por medio del id de la empresa
     company = db.query(Company).filter(

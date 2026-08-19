@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database import SessionLocal
 from app.auth import (get_current_user, require_traveler, require_route_manager, require_reservation_create, require_reservation_view)
 from app.models.reservation import Reservation
@@ -125,6 +126,70 @@ def get_reservations_details(
         })
     return result
 
+#estadísticas para el dashboard
+@router.get("/dashboard")
+def get_reservation_dashboard(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    role = current_user["role"]
+    #system admin y auditor pueden ver todas las reservaciones
+    if role in ["system_admin", "auditor"]:
+        total_reservations = db.query(Reservation).count()
+        top_route = (
+            db.query(
+                Route.origin,
+                Route.destination,
+                db.func.count(Reservation.id).label("reservation_count")
+            )
+            .join(Reservation, Reservation.route_id == Route.id)
+            .group_by(Route.id, Route.origin, Route.destination)
+            .order_by(func.count(Reservation.id).desc())
+            .first()
+        )
+        return {
+            "total_reservations": total_reservations,
+            "top_route": (
+                {
+                    "name": f"{top_route.origin} → {top_route.destination}",
+                    "reservations": top_route.reservation_count
+                }
+                if top_route else None
+            )
+        }
+    #company admin y route manager
+    #solo ven las reservaciones de su empresa
+    if role in ["company_admin", "route_manager"]:
+        total_reservations = (
+            db.query(Reservation)
+            .join(Route)
+            .filter(
+                Route.company_id == current_user["company_id"]
+            )
+            .count()
+        )
+        return {
+            "total_reservations": total_reservations,
+            "top_route": None
+        }
+    #cliente
+    if role == "traveler":
+        total_reservations = (
+            db.query(Reservation)
+            .filter(
+                Reservation.user_id == int(current_user["sub"])
+            )
+            .count()
+        )
+        return {
+            "total_reservations": total_reservations,
+            "top_route": None
+        }
+    raise HTTPException(
+        status_code=403,
+        detail="Sin permisos"
+    )
+
 # Actualizar reservación
 # Solo personal autorizado
 @router.put("/{reservation_id}", response_model=ReservationResponse)
@@ -219,6 +284,73 @@ def get_available_seats(
             for r in reservations
         ]
     }
+
+# Estadísticas de reservaciones para el dashboard
+@router.get("/dashboard-stats")
+def get_reservation_dashboard_stats(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    role = current_user["role"]
+    # Traveler: solamente sus reservaciones
+    if role == "traveler":
+        total = db.query(Reservation).filter(
+            Reservation.user_id == int(current_user["sub"])
+        ).count()
+
+        return {
+            "total_reservations": total
+        }
+    # System admin y auditor: todas
+    if role in ["system_admin", "auditor"]:
+        reservations = db.query(Reservation).all()
+    # Admin de empresa y gestor de rutas:
+    # solamente reservaciones de su empresa
+    elif role in ["company_admin", "route_manager"]:
+        reservations = (
+            db.query(Reservation)
+            .join(Route)
+            .filter(
+                Route.company_id == current_user["company_id"]
+            )
+            .all()
+        )
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Sin permisos"
+        )
+    total = len(reservations)
+    result = {
+        "total_reservations": total
+    }
+    # La ruta más reservada SOLO la ven system_admin y auditor
+    if role in ["system_admin", "auditor"]:
+        route_counts = {}
+        for reservation in reservations:
+            route_counts[reservation.route_id] = (
+                route_counts.get(reservation.route_id, 0) + 1
+            )
+        if route_counts:
+            top_route_id = max(
+                route_counts,
+                key=route_counts.get
+            )
+            route = db.query(Route).filter(
+                Route.id == top_route_id
+            ).first()
+            if route:
+                result["top_route"] = {
+                    "id": route.id,
+                    "route_name": f"{route.origin} → {route.destination}",
+                    "reservations": route_counts[top_route_id]
+                }
+            else:
+                result["top_route"] = None
+        else:
+            result["top_route"] = None
+
+    return result
 
 # Reservaciones del usuario actual
 @router.get("/me")

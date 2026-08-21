@@ -1,8 +1,10 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-# conecta con la bas e de datos de SQLAlchemy
-DATABASE_URL = "postgresql://postgres:1234@localhost:5432/transport_db"
-# crea el motor de la bd
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:TU_PASSWORD@localhost:5432/transport_db"
+)
 engine = create_engine(DATABASE_URL)
 # crea la sesion local de la bd
 SessionLocal = sessionmaker(

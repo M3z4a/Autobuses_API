@@ -73,7 +73,7 @@
 </div>
   <!--scripts necesarios para el funcionamiento conjunto del frontend y el backend (no quitar)-->
 <script>
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = window.location.origin;
 //funcion para registrar usuario
 async function register() {
     //parametros necesarios
@@ -97,7 +97,7 @@ async function register() {
                 name,
                 email,
                 password,
-                role: "client"
+                role: "traveler"
             })
         });
         const data = await res.json();

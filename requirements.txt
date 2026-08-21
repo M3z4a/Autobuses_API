@@ -4,5 +4,5 @@ sqlalchemy
 psycopg2-binary
 python-jose
 passlib
-paypalcheckoutsdk
+paypal-checkout-sdk
 pydantic
